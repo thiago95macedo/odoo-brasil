@@ -256,6 +256,8 @@ class AccountInvoice(models.Model):
                     eletronic = self.env['invoice.eletronic'].create(edoc_vals)
                     eletronic.validate_invoice()
                     eletronic.action_post_validate()
+                    if self.env.context.get('send_directly'):
+                        eletronic.action_send_eletronic_invoice()
 
             if item.service_document_id.nfse_eletronic and \
                not item.company_id.l10n_br_nfse_conjugada:
@@ -267,6 +269,9 @@ class AccountInvoice(models.Model):
                     eletronic = self.env['invoice.eletronic'].create(edoc_vals)
                     eletronic.validate_invoice()
                     eletronic.action_post_validate()
+                    if self.env.context.get('send_directly'):
+                        eletronic.action_send_eletronic_invoice()
+
         return res
 
     @api.multi

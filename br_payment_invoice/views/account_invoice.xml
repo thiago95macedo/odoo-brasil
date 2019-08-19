@@ -18,7 +18,7 @@
                 </h3>
             </group>
             <tree name="vencimentos" position="inside">
-                <button name="open_wizard_schedule_payment" type="object" string="AGENDAR" class="btn btn-success btn-xs"/>
+                <button name="open_wizard_schedule_payment" type="object" string="AGENDAR" class="btn btn-success btn-sm"/>
             </tree>
         </field>
     </record>
