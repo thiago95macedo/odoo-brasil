@@ -4,10 +4,13 @@
     <field name="name">declaracao.importacao.tree</field>
     <field name="model">declaracao.importacao</field>
     <field name="arch" type="xml">
-      <tree string="Declaração Importação" default_order="sequence,name desc">
+      <tree string="Declaração Importação" default_order="date_register desc, name">
         <field name="name" required="1"/>
-        <field name="date_registro"/>
-        <field name="sequence" />
+        <field name="date_register"/>
+        <field name="seller_id" />
+        <field name="freight_total" />
+        <field name="insurance_total" />
+        <field name="amount_total" />
       </tree>
     </field>
   </record>
@@ -18,34 +21,47 @@
     <field name="arch" type="xml">
       <form string="Declaração Importação">
         <sheet>
+          <h1>
+            <field name="name" required="1"/>
+          </h1>
           <group>
             <group>
-              <field name="name" required="1"/>
+              <field name="seller_id" />
             </group>
             <group>
-              <field name="sequence" />
-              <field name="tag_ids" widget="many2many_tags" />
+              <field name="date_register" />
+              <field name="date_picking" />
             </group>
           </group>
-        </sheet>
-        <sheet>
         <notebook>
-          <page string="Adições">
-            <group>
-              <field name="declaracao_line_ids" nolabel="1" >
+          <page string="Produtos">
+              <field name="product_line_ids" nolabel="1" >
                 <tree editable="bottom">
                   <field name="product_id" />
                   <field name="quantity" />
+                  <field name="currency_id" invisible="1" />
+                  <field name="price_unit" />
+                  <field name="price_subtotal" />
                 </tree>
               </field>
-            </group>
           </page>
-          <page string="Bolo de Banana" >
-          <group>
-            <field name="date_registro"/>
-          </group>
-        </page>
         </notebook>
+        <group>
+          <group>
+            <field name="gross_weight_total" />
+            <field name="net_weight_total" />
+            <field name="freight_currency_id" />
+            <field name="insurance_currency_id" />
+          </group>
+          <group class="oe_subtotal_footer oe_right">
+            <field name="freight_total" widget="monetary" options="{'currency_field': 'freight_currency_id'}"/>
+            <field name="insurance_total" widget="monetary" options="{'currency_field': 'insurance_currency_id'}"/>
+            <div class="oe_subtotal_footer_separator oe_inline">
+                <label for="amount_total"/>
+            </div>
+            <field name="amount_total" nolabel="1" class="oe_subtotal_footer_separator" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+        </group>
+        </group>
       </sheet>
       </form>
     </field>
@@ -65,9 +81,15 @@
     </field>
   </record>
 
+  <!-- parent="purchase.menu_purchase_control" -->
+  <menuitem id="menu_root_di"
+    name="Declaração de Importação"
+    web_icon="declaracao_importacao,static/description/icon.png"
+    sequence="1"/>
+
 <menuitem id="menu_declaracao_importacao"
   name="Declaração Importação (DI)"
-  parent="purchase.menu_purchase_control"
+  parent="menu_root_di"
   action="declaracao_importacao_action_form"
   sequence="3"/>
 
