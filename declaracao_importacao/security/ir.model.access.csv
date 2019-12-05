@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_di_manager,di.manager,model_declaracao_importacao,purchase.group_purchase_manager,1,1,1,1
+access_di_user,di.user,model_declaracao_importacao,purchase.group_purchase_user,1,0,0,0
+access_di_tags_user,di.tags.user,model_declaracao_tags,hr.group_hr_user,1,1,1,1
+access_di_lines_user,di.lines.user,model_declaracao_importacao_line,hr.group_hr_user,1,1,1,1

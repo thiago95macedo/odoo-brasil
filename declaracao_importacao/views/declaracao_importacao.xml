@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="declaracao_importacao_view_tree" model="ir.ui.view">
+    <field name="name">declaracao.importacao.tree</field>
+    <field name="model">declaracao.importacao</field>
+    <field name="arch" type="xml">
+      <tree string="Declaração Importação" default_order="sequence,name desc">
+        <field name="name" required="1"/>
+        <field name="date_registro"/>
+        <field name="sequence" />
+      </tree>
+    </field>
+  </record>
+
+  <record id="declaracao_importacao_view_form" model="ir.ui.view">
+    <field name="name">declaracao.importacao.form</field>
+    <field name="model">declaracao.importacao</field>
+    <field name="arch" type="xml">
+      <form string="Declaração Importação">
+        <sheet>
+          <group>
+            <group>
+              <field name="name" required="1"/>
+            </group>
+            <group>
+              <field name="sequence" />
+              <field name="tag_ids" widget="many2many_tags" />
+            </group>
+          </group>
+        </sheet>
+        <sheet>
+        <notebook>
+          <page string="Adições">
+            <group>
+              <field name="declaracao_line_ids" nolabel="1" >
+                <tree editable="bottom">
+                  <field name="product_id" />
+                  <field name="quantity" />
+                </tree>
+              </field>
+            </group>
+          </page>
+          <page string="Bolo de Banana" >
+          <group>
+            <field name="date_registro"/>
+          </group>
+        </page>
+        </notebook>
+      </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="declaracao_importacao_action_form" model="ir.actions.act_window">
+    <field name="name">Declaração Importação</field>
+    <field name="res_model">declaracao.importacao</field>
+    <field name="view_mode">tree,form</field>
+    <field name="help" type="html">
+      <p class="oe_view_nocontent_create">
+        <b>Registre aqui suas declarações de importação.</b>
+      </p>
+      <p>
+        <i>Você pode importar da DI em formato de xml.</i>
+      </p>
+    </field>
+  </record>
+
+<menuitem id="menu_declaracao_importacao"
+  name="Declaração Importação (DI)"
+  parent="purchase.menu_purchase_control"
+  action="declaracao_importacao_action_form"
+  sequence="3"/>
+
+
+</odoo>
