@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="declaracao_importacao_wizard" model="ir.ui.view">
+    <field name="name">declaracao.importacao.wizard</field>
+    <field name="model">declaracao.importacao.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Importação do XML da DI">
+          <group>
+            <group>
+              <field name="xml"/>
+            </group>
+          </group>
+          <footer>
+              <button string="Salvar" name="action_save_close" type="object" class="oe_highlight"/>
+              or
+              <button string="Cancelar" class="oe_link" special="cancel"/>
+          </footer>
+      </form>
+    </field>
+  </record>
+
+  <record id="declaracao_importacao_wizard_action_form" model="ir.actions.act_window">
+    <field name="name">declaracao.importacao.wizard</field>
+    <field name="res_model">declaracao.importacao.wizard</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+  </record>
+
+  <menuitem id="menu_declaracao_importacao_wizard"
+    name="Importação XML DI"
+    parent="menu_root_di"
+    action="declaracao_importacao_wizard_action_form"
+    sequence="2"/>
+
+</odoo>

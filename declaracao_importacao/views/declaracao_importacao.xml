@@ -21,16 +21,33 @@
     <field name="arch" type="xml">
       <form string="Declaração Importação">
         <sheet>
-          <h1>
-            <field name="name" required="1"/>
-          </h1>
+          <div class="oe_title">
+            <h1>
+              <field name="name" required="1"/>
+            </h1>
+          </div>
           <group>
             <group>
               <field name="seller_id" />
-            </group>
-            <group>
               <field name="date_register" />
               <field name="date_picking" />
+            </group>
+            <group>
+              <field name="gross_weight_total" />
+              <field name="net_weight_total" />
+            </group>
+            <group>
+              <div>
+                <label for="currency_id"  class="oe_inline" />
+                <span class="oe_inline" />
+                <field name="currency_id"  class="oe_inline" />
+                <span class="oe_inline" />
+                <field name="currency_fee"  class="oe_inline" />
+              </div>
+            </group>
+            <group>
+              <field name="freight_currency_id" />
+              <field name="insurance_currency_id" />
             </group>
           </group>
         <notebook>
@@ -38,26 +55,23 @@
               <field name="product_line_ids" nolabel="1" >
                 <tree editable="bottom">
                   <field name="product_id" />
+                  <field name="name" />
                   <field name="quantity" />
                   <field name="currency_id" invisible="1" />
                   <field name="price_unit" />
-                  <field name="price_subtotal" />
+                  <field name="cost" />
+                  <field name="price_subtotal" widget="monetary" options="{'currency_field': 'currency_id'}" />
                 </tree>
               </field>
           </page>
         </notebook>
         <group>
-          <group>
-            <field name="gross_weight_total" />
-            <field name="net_weight_total" />
-            <field name="freight_currency_id" />
-            <field name="insurance_currency_id" />
-          </group>
           <group class="oe_subtotal_footer oe_right">
+            <field name="amount_subtotal" widget="monetary" options="{'currency_field': 'currency_id'}"/>
             <field name="freight_total" widget="monetary" options="{'currency_field': 'freight_currency_id'}"/>
             <field name="insurance_total" widget="monetary" options="{'currency_field': 'insurance_currency_id'}"/>
             <div class="oe_subtotal_footer_separator oe_inline">
-                <label for="amount_total"/>
+                <label for="amount_total" widget="monetary" options="{'currency_field': 'currency_id'}" />
             </div>
             <field name="amount_total" nolabel="1" class="oe_subtotal_footer_separator" widget="monetary" options="{'currency_field': 'currency_id'}"/>
         </group>

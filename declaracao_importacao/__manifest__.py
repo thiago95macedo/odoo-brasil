@@ -15,6 +15,7 @@
     'depends': ['purchase'],
     'data': [
         'views/declaracao_importacao.xml',
+        'wizards/declaracao_importacao_wizard.xml',
         'security/ir.model.access.csv'],
     'installable': True,
     'application': False,
