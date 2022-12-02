@@ -18,7 +18,10 @@ odoo.define('br_point_of_sale', function (require) {
     models.PosModel = models.PosModel.extend({
         _save_to_server: function (order, opts) {
             var self = this
-            return _super_order._save_to_server.apply(this, arguments).then((result) => self.get_nfce(result));
+            return _super_order._save_to_server.apply(this, arguments).then((result) => {
+                self.get_nfce(result);
+                return result;
+            });
         },
         get_nfce: function (pos_order_ids) {
             if (!pos_order_ids.length) {
@@ -47,7 +50,7 @@ odoo.define('br_point_of_sale', function (require) {
             var self = this;
                 console.log('Printing');
                 let base_url = session['web.base.url'];
-                let w = window.open(`${base_url}/report/pdf/br_nfe.main_template_br_nfe_danfe/${einvoice_id}`);
+                let w = window.open(`${base_url}/report/pdf/l10n_br_eletronic_document.main_template_br_nfe_danfe/${einvoice_id}`);
                 if(w) {
                     w.print();
                 }

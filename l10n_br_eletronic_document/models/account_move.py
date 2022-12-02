@@ -35,6 +35,31 @@ class AccountMove(models.Model):
          ('manually', 'Manualmente')], string="Nota Eletrônica", default=_get_default_policy)
     carrier_partner_id = fields.Many2one('res.partner', string='Transportadora')
 
+    nfe_number = fields.Integer(string="Número NFe", compute="_compute_nfe_number")
+
+    def _compute_nfe_number(self):
+        for item in self:
+            docs = self.env['eletronic.document'].search(
+                [('move_id', '=', item.id)])
+            if docs:
+                item.nfe_number = docs[0].numero
+            else:
+                item.nfe_number = 0
+
+    @api.onchange("fiscal_position_id")
+    def _onchange_fiscal_position_id(self):
+        super(AccountMove, self)._onchange_fiscal_position_id()
+        if self.fiscal_position_id:
+            self.l10n_br_edoc_policy = self.fiscal_position_id.edoc_policy
+
+    @api.onchange('partner_id')
+    def _onchange_partner_id(self):
+        super(AccountMove, self)._onchange_partner_id()
+        if self.fiscal_position_id.edoc_policy:  
+            self.l10n_br_edoc_policy = self.fiscal_position_id.edoc_policy
+        else:   
+            self.l10n_br_edoc_policy = None
+
     @api.model
     def _autopost_draft_entries(self):
         records = self.search([
@@ -226,15 +251,10 @@ class AccountMove(models.Model):
 
         return lines
 
-    def _prepare_eletronic_doc_vals(self, invoice_lines):
+    def _prepare_eletronic_doc_vals(self, invoice_lines, numero_nfe):
         invoice = self
         num_controle = int(''.join([str(SystemRandom().randrange(9))
                                     for i in range(8)]))
-        numero_nfe = numero_rps = 0
-        if self.company_id.l10n_br_nfe_sequence:
-            numero_nfe = self.company_id.l10n_br_nfe_sequence.next_by_id()
-        if self.company_id.l10n_br_nfe_service_sequence:
-            numero_rps = self.company_id.l10n_br_nfe_service_sequence.next_by_id()
         vals = {
             'name': invoice.name,
             'move_id': invoice.id,
@@ -260,7 +280,7 @@ class AccountMove(models.Model):
             'pedido_compra': invoice.ref,
             'serie_documento': invoice.fiscal_position_id.serie_nota_fiscal,
             'numero': numero_nfe,
-            'numero_rps': numero_rps,
+            'numero_rps': numero_nfe,
             'valor_frete': invoice.l10n_br_delivery_amount,
             'valor_seguro': invoice.l10n_br_insurance_amount,
             'valor_despesas': invoice.l10n_br_expense_amount,
@@ -326,13 +346,14 @@ class AccountMove(models.Model):
         total_produtos = total_servicos = 0.0
         bruto_produtos = bruto_servicos = 0.0
         total_desconto = 0
+
         for inv_line in invoice_lines:
             total_desconto += round(inv_line.price_unit * inv_line.quantity * inv_line.discount / 100, 2)
             if inv_line.product_id.type == 'service':
-                total_servicos += inv_line.price_subtotal
+                total_servicos += inv_line.price_total
                 bruto_servicos += round(inv_line.quantity * inv_line.price_unit, 2)
             else:
-                total_produtos += inv_line.price_subtotal
+                total_produtos += inv_line.price_total
                 bruto_produtos += round(inv_line.quantity * inv_line.price_unit, 2)
 
         vals.update({
@@ -340,8 +361,7 @@ class AccountMove(models.Model):
             'valor_servicos': total_servicos,
             'valor_produtos': total_produtos,
             'valor_desconto': total_desconto,
-            'valor_final': total_produtos + total_servicos + vals['valor_frete'] + vals['valor_seguro'] +
-                           vals['valor_despesas'],
+            'valor_final': invoice.amount_total,
         })
 
         # Transportadora
@@ -391,7 +411,8 @@ class AccountMove(models.Model):
                 self._create_product_eletronic_document(move, products)
 
     def _create_service_eletronic_document(self, move, services):
-        vals = move._prepare_eletronic_doc_vals(services)
+        numero_rps = self.company_id.l10n_br_nfe_service_sequence.next_by_id()
+        vals = move._prepare_eletronic_doc_vals(services, numero_rps)
         vals['model'] = 'nfse'
         vals['document_line_ids'] = move._prepare_eletronic_line_vals(services)
         vals.update(self.sum_line_taxes(vals))
@@ -399,7 +420,8 @@ class AccountMove(models.Model):
         nfse._compute_legal_information()
 
     def _create_product_eletronic_document(self, move, products):
-        vals = move._prepare_eletronic_doc_vals(products)
+        numero_nfe = self.company_id.l10n_br_nfe_sequence.next_by_id()
+        vals = move._prepare_eletronic_doc_vals(products, numero_nfe)
         vals['model'] = 'nfe'
 
         if self.move_type == 'out_refund':
@@ -439,7 +461,10 @@ class AccountMove(models.Model):
             return related_doc
 
     def action_post(self):
-        moves = self.filtered(lambda x: x.l10n_br_edoc_policy == 'directly' and x.move_type != 'entry')
+        moves = self.filtered(lambda x: (
+            x.l10n_br_edoc_policy == 'directly' 
+            or x.l10n_br_edoc_policy == 'after_payment') and x.move_type != 'entry')
+
         moves._validate_for_eletronic_document()
         res = super(AccountMove, self).action_post()
         moves.action_create_eletronic_document()
@@ -494,6 +519,7 @@ class AccountMoveLine(models.Model):
 
         fiscal_pos = self.move_id.fiscal_position_id
 
+
         vals = {
             'name': self.name,
             'product_id': self.product_id.id,
@@ -505,7 +531,7 @@ class AccountMoveLine(models.Model):
             'quantidade': self.quantity,
             'preco_unitario': self.price_unit,
             'valor_bruto': round(self.quantity * self.price_unit, 2),
-            'desconto': round(self.quantity * self.price_unit, 2) - self.price_subtotal,
+            'desconto': round(self.quantity * self.price_unit, 2) - self.price_total,
             'valor_liquido': self.price_total,
             'origem': self.product_id.l10n_br_origin,
             #  'tributos_estimados': self.tributos_estimados,
@@ -560,6 +586,7 @@ class AccountMoveLine(models.Model):
             # - ISS -
             'item_lista_servico': self.product_id.service_type_id.code,
             'codigo_servico_municipio': self.product_id.service_code,
+            'descricao_codigo_municipio': self.product_id.service_code_description,
             'iss_aliquota': iss.amount or 0,
             'iss_base_calculo': self.price_subtotal if iss.amount else 0,
             'iss_valor': round(self.price_subtotal * iss.amount / 100, 2),
